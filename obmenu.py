@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # coding=utf8
 
 import os
@@ -27,15 +29,16 @@ def parseDeskFiles():
                     if line.find("Categories=") == 0:
                         entry["Categories"] = line[len("Categories="):].split(";")
                 if "Categories" not in entry or "Name" not in entry or "Exec" not in entry:
+                    deskfile.close()
                     continue
                 entry["Exec"] = entry["Exec"].replace("%U", "").replace("%F", "").replace("%u", "").replace("%f", "").strip()
                 entry["Name"] = entry["Name"].replace("&", "&amp;")
                 found = False
                 for item in entries:
                     if item["Name"] == entry["Name"]:
-                        found = True
-                if not found:
-                    entries.append(entry)
+                        deskfile.close()
+                        continue
+                entries.append(entry)
                 deskfile.close()
     return entries
 
@@ -100,10 +103,12 @@ def getExecLine(entry):
 
 
 def writeMenu():
-    print("Writing entirely new menu ...");
+    print("Writing new menu ...");
     entries = parseDeskFiles();
-    print("Parsed .desktop files and found" , len(entries) , "entries.");
+    print("Parsed .desktop files and found " + str(len(entries)) + " entries.");
+
     # loop through categories
+
     matchedlist = []
     submenu = {}
     for items in menuconfig.cats:
@@ -116,7 +121,9 @@ def writeMenu():
                 matchedlist.append(entryindex)
                 submenu[items[0]] += getExecLine(entry)
             entryindex += 1
+
     # make text from submenu
+
     menuText = ""
     for items in menuconfig.cats:
         if items[0] in submenu and submenu[items[0]] == "":
@@ -129,14 +136,13 @@ def writeMenu():
                 menuText += " icon=\"" + icon + "\""
         menuText += ">"
         if items[1] == "Unmatched":
-            print("Items that were not matched are written to their default submenu.");
             for index in range(len(entries)):
                 if index not in matchedlist:
                     menuText += getExecLine(entries[index])
         else:
             menuText += submenu[items[0]]
         menuText += "</menu>\n"
-    print("There were" , len(matchedlist) , "entries matching the categories.");
+    print("There were " + str(len(matchedlist)) + " entries matching the categories.");
     fp = open(os.path.expanduser("~") + "/.config/openbox/menu.xml", "r+")
     linearray = fp.read().split("\n")
     fp.seek(0)
@@ -154,6 +160,7 @@ def writeMenu():
     fp.write(buf)
     fp.truncate()
     fp.close()
+    os.system("openbox --reconfigure")
     return
 
 writeMenu()
