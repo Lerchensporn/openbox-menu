@@ -36,9 +36,10 @@ def parseDeskFiles():
                 found = False
                 for item in entries:
                     if item["Name"] == entry["Name"]:
-                        deskfile.close()
-                        continue
-                entries.append(entry)
+                        found = True
+                        break
+                if not found:
+                    entries.append(entry)
                 deskfile.close()
     return entries
 
