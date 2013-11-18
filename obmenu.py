@@ -1,9 +1,35 @@
 #!/usr/bin/env python
-
-# coding=utf8
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2011 woho
+# Copyright (c) 2013 Lara Maia <lara@craft.net.br>
+#
+# Obmenu is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import menuconfig
+import logging
+
+def replaceSymbols(text):
+    dic = { "%U":"", "%u":"",
+            "%F":"", "%f":"",
+            "&":"amp;",
+          }
+          
+    for i, o in dic.items():
+        text = text.replace(i, o)
+    return text
 
 def parseDeskFiles():
     entries = []
@@ -35,8 +61,8 @@ def parseDeskFiles():
                 if "Categories" not in entry or "Name" not in entry or "Exec" not in entry:
                     deskfile.close()
                     continue
-                entry["Exec"] = entry["Exec"].replace("%U", "").replace("%F", "").replace("%u", "").replace("%f", "").strip()
-                entry["Name"] = entry["Name"].replace("&", "&amp;")
+                entry["Exec"] = replaceSymbols(entry["Exec"]).strip()
+                entry["Name"] = replaceSymbols(entry["Name"])
                 found = False
                 for item in entries:
                     if item["Name"] == entry["Name"]:
@@ -77,12 +103,12 @@ def getExecLine(entry):
 
 
 def writeMenu():
-    print("Writing new menu ...");
-    entries = parseDeskFiles();
-    print("Parsed .desktop files and found " + str(len(entries)) + " entries.");
+    logging.info("Parsing .desktop files ...")
+    entries = parseDeskFiles()
+    logging.debug("Found %d entries.", len(entries))
 
     # loop through categories
-
+    logging.info("Scaning categories... ")
     matchedlist = []
     submenu = {}
     for items in menuconfig.cats:
@@ -98,12 +124,12 @@ def writeMenu():
             entryindex += 1
 
     # make text from submenu
-
+    logging.info("Scaning submenus")
     menuText = ""
     labelIndex = 0
     for items in menuconfig.cats:
         if items[0] in submenu and submenu[items[0]] == "":
-            print("The submenu '" + items[0] + "' has no entries and will be ignored.");
+            logging.warning("The submenu '%s' has no entries and will be ignored.", items[0]);
             labelIndex +=1
             continue
         menuText += "<menu id=\"" + items[0] + "\" label=\"" + menuconfig.cats_labels[labelIndex] + "\""
@@ -118,7 +144,8 @@ def writeMenu():
             menuText += submenu[items[0]]
         menuText += "</menu>\n"
         labelIndex +=1
-    print("There were " + str(len(matchedlist)) + " entries matching the categories.");
+    logging.debug("There were %d entries matching the categories.", len(matchedlist));
+    logging.info("writing new menu...")
     fp = open(os.path.expanduser("~") + "/.config/openbox/menu.xml", "r+")
     linearray = fp.read().split("\n")
     fp.seek(0)
@@ -139,4 +166,6 @@ def writeMenu():
     os.system("openbox --reconfigure")
     return
 
-writeMenu()
+if __name__ == "__main__":
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+    obmenu = writeMenu()

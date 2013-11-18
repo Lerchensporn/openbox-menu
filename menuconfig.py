@@ -1,5 +1,3 @@
-# coding=utf8
-
 # Categories for display
 # See http://standards.freedesktop.org/menu-spec/latest/apa.html
 # Format: [ ["category 1", "icon-for-category-1"], ["category 2", "icon-for-category-2"], "..." ]
