@@ -66,37 +66,6 @@ def getIconPath(icon):
                     return path + "/" + icon + ext
     return ""
 
-def matches(piece, liste):
-    left = piece.find("(")
-    right = piece.find(")")
-    if left != -1 or right != -1:
-        if left != 0 or left == -1 or right == -1 or piece[len(piece) - 1] != ")":
-            raise "Invalid format"
-        return matches(piece[1:right], liste) or matches(piece[right + 2:len(piece) - 1], liste)
-    index = 0
-    nextindex = 0
-    while True:
-        nextplus = piece.find("+", index + 1)
-        nextminus = piece.find("-", index + 1)
-        if nextplus == nextminus == -1:
-            nextindex = len(piece)
-        elif (nextplus < nextminus or nextminus == -1) and nextplus != -1 :
-            nextindex = nextplus
-        elif nextminus != -1:
-            nextindex = nextminus
-        if piece[index] == "+":
-            if piece[index + 1:nextindex] not in liste:
-                return False
-        elif piece[index] == "-":
-            if piece[index + 1:nextindex] in liste:
-                return False
-        else: raise "Invalid format"
-        if nextindex == len(piece):
-            break
-        index = nextindex
-    return True
-
-
 def getExecLine(entry):
     line = "    <item label=\"" + entry["Name"] + "\""
     if "Icon" in entry:
@@ -117,14 +86,15 @@ def writeMenu():
     matchedlist = []
     submenu = {}
     for items in menuconfig.cats:
-        if items[1] == "Unmatched": continue
+        if items[0] == "Others": continue
         submenu[items[0]] = ""
         entries = sorted(entries, key=lambda entry: entry["Name"].lower())
         entryindex = 0;
         for entry in entries:
-            if matches(items[1], entry["Categories"]):
-                matchedlist.append(entryindex)
-                submenu[items[0]] += getExecLine(entry)
+            for cat in entry["Categories"]:
+                if items[0] == cat:
+                    matchedlist.append(entryindex)
+                    submenu[items[0]] += getExecLine(entry)
             entryindex += 1
 
     # make text from submenu
@@ -135,12 +105,10 @@ def writeMenu():
             print("The submenu '" + items[0] + "' has no entries and will be ignored.");
             continue
         menuText += "<menu id=\"" + items[0] + "\" label=\"" + items[0] + "\""
-        if items[2] != "":
-            icon = getIconPath(items[2])
-            if len(icon) > 0:
-                menuText += " icon=\"" + icon + "\""
+        if len(getIconPath(items[1])) != 0:
+            menuText += " icon=\"" + getIconPath(items[1]) + "\""
         menuText += ">"
-        if items[1] == "Unmatched":
+        if items[0] == "Others":
             for index in range(len(entries)):
                 if index not in matchedlist:
                     menuText += getExecLine(entries[index])
