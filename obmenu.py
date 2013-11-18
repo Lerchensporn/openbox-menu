@@ -100,11 +100,13 @@ def writeMenu():
     # make text from submenu
 
     menuText = ""
+    labelIndex = 0
     for items in menuconfig.cats:
         if items[0] in submenu and submenu[items[0]] == "":
             print("The submenu '" + items[0] + "' has no entries and will be ignored.");
+            labelIndex +=1
             continue
-        menuText += "<menu id=\"" + items[0] + "\" label=\"" + items[0] + "\""
+        menuText += "<menu id=\"" + items[0] + "\" label=\"" + menuconfig.cats_labels[labelIndex] + "\""
         if len(getIconPath(items[1])) != 0:
             menuText += " icon=\"" + getIconPath(items[1]) + "\""
         menuText += ">"
@@ -115,6 +117,7 @@ def writeMenu():
         else:
             menuText += submenu[items[0]]
         menuText += "</menu>\n"
+        labelIndex +=1
     print("There were " + str(len(matchedlist)) + " entries matching the categories.");
     fp = open(os.path.expanduser("~") + "/.config/openbox/menu.xml", "r+")
     linearray = fp.read().split("\n")

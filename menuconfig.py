@@ -1,5 +1,8 @@
 # coding=utf8
 
+# Categories for display
+# See http://standards.freedesktop.org/menu-spec/latest/apa.html
+# Format: [ ["category 1", "icon-for-category-1"], ["category 2", "icon-for-category-2"], "..." ]
 cats = [
     ["Development","applications-development.png"],
     ["Network",    "applications-internet.png"   ],
@@ -13,7 +16,21 @@ cats = [
     ["Settings",   "applications-utilities.png"  ],
     ]
 
+# Labels for categories (in the same order as the variable above)
+# Format: [ "category 1", "category 2", "..." ]
+cats_labels = [ "Development", 
+                "Network",
+                "Office",
+                "Game",
+                "Science",
+                "Graphics",
+                "Multimedia",
+                "System",
+                "Others",
+                "Settings",
+              ]
+
 # Language for the name of programs
-# Example:
-#name = [ "Name[pt_BR]", "Name=[pt]" ]
+# Format: [ "Name[language]", "..." ]
+# E.g.: name = [ "Name[pt_BR]", "Name=[pt]", "..." ]
 name = [ "Name[en]" ]
