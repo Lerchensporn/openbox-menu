@@ -12,3 +12,8 @@ cats = [
     ["Others","Unmatched","applications-other.png"],
     ["Settings","+Settings","applications-utilities.png"],
     ]
+
+# Language for the name of programs
+# Example:
+#name = [ "Name[pt_BR]", "Name=[pt]" ]
+name = [ "Name[en]" ]

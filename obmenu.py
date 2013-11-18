@@ -18,9 +18,8 @@ def parseDeskFiles():
                 entry = {}
                 for line in deskfile:
                     line = line.strip()
-                    if line.find("Name[de]=") == 0:
-                        entry["Name"] = line[len("Name[de]="):]
-                    elif line.find("Name=") == 0:
+                    # Default config
+                    if line.find("Name=") == 0:
                         entry["Name"] = line[len("Name="):]
                     if line.find("Exec=") == 0:
                         entry["Exec"] = line[len("Exec="):]
@@ -28,6 +27,11 @@ def parseDeskFiles():
                         entry["Icon"] = line[len("Icon="):]
                     if line.find("Categories=") == 0:
                         entry["Categories"] = line[len("Categories="):].split(";")
+                    # user config
+                    for item in menuconfig.name:
+                        if line.find(item+"=") == 0:
+                            entry["Name"] = line[len(item+"="):]
+                            break
                 if "Categories" not in entry or "Name" not in entry or "Exec" not in entry:
                     deskfile.close()
                     continue
