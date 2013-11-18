@@ -1,9 +1,35 @@
 #!/usr/bin/env python
-
-# coding=utf8
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2011 woho
+# Copyright (c) 2013 Lara Maia <lara@craft.net.br>
+#
+# Obmenu is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import menuconfig
+import logging
+
+def replaceSymbols(text):
+    dic = { "%U":"", "%u":"",
+            "%F":"", "%f":"",
+            "&":"amp;",
+          }
+          
+    for i, o in dic.items():
+        text = text.replace(i, o)
+    return text
 
 def parseDeskFiles():
     entries = []
@@ -18,9 +44,8 @@ def parseDeskFiles():
                 entry = {}
                 for line in deskfile:
                     line = line.strip()
-                    if line.find("Name[de]=") == 0:
-                        entry["Name"] = line[len("Name[de]="):]
-                    elif line.find("Name=") == 0:
+                    # Default config
+                    if line.find("Name=") == 0:
                         entry["Name"] = line[len("Name="):]
                     if line.find("Exec=") == 0:
                         entry["Exec"] = line[len("Exec="):]
@@ -28,11 +53,16 @@ def parseDeskFiles():
                         entry["Icon"] = line[len("Icon="):]
                     if line.find("Categories=") == 0:
                         entry["Categories"] = line[len("Categories="):].split(";")
+                    # user config
+                    for item in menuconfig.name:
+                        if line.find(item+"=") == 0:
+                            entry["Name"] = line[len(item+"="):]
+                            break
                 if "Categories" not in entry or "Name" not in entry or "Exec" not in entry:
                     deskfile.close()
                     continue
-                entry["Exec"] = entry["Exec"].replace("%U", "").replace("%F", "").replace("%u", "").replace("%f", "").strip()
-                entry["Name"] = entry["Name"].replace("&", "&amp;")
+                entry["Exec"] = replaceSymbols(entry["Exec"]).strip()
+                entry["Name"] = replaceSymbols(entry["Name"])
                 found = False
                 for item in entries:
                     if item["Name"] == entry["Name"]:
@@ -62,37 +92,6 @@ def getIconPath(icon):
                     return path + "/" + icon + ext
     return ""
 
-def matches(piece, liste):
-    left = piece.find("(")
-    right = piece.find(")")
-    if left != -1 or right != -1:
-        if left != 0 or left == -1 or right == -1 or piece[len(piece) - 1] != ")":
-            raise "Invalid format"
-        return matches(piece[1:right], liste) or matches(piece[right + 2:len(piece) - 1], liste)
-    index = 0
-    nextindex = 0
-    while True:
-        nextplus = piece.find("+", index + 1)
-        nextminus = piece.find("-", index + 1)
-        if nextplus == nextminus == -1:
-            nextindex = len(piece)
-        elif (nextplus < nextminus or nextminus == -1) and nextplus != -1 :
-            nextindex = nextplus
-        elif nextminus != -1:
-            nextindex = nextminus
-        if piece[index] == "+":
-            if piece[index + 1:nextindex] not in liste:
-                return False
-        elif piece[index] == "-":
-            if piece[index + 1:nextindex] in liste:
-                return False
-        else: raise "Invalid format"
-        if nextindex == len(piece):
-            break
-        index = nextindex
-    return True
-
-
 def getExecLine(entry):
     line = "    <item label=\"" + entry["Name"] + "\""
     if "Icon" in entry:
@@ -104,46 +103,49 @@ def getExecLine(entry):
 
 
 def writeMenu():
-    print("Writing new menu ...");
-    entries = parseDeskFiles();
-    print("Parsed .desktop files and found " + str(len(entries)) + " entries.");
+    logging.info("Parsing .desktop files ...")
+    entries = parseDeskFiles()
+    logging.debug("Found %d entries.", len(entries))
 
     # loop through categories
-
+    logging.info("Scaning categories... ")
     matchedlist = []
     submenu = {}
     for items in menuconfig.cats:
-        if items[1] == "Unmatched": continue
+        if items[0] == "Others": continue
         submenu[items[0]] = ""
         entries = sorted(entries, key=lambda entry: entry["Name"].lower())
         entryindex = 0;
         for entry in entries:
-            if matches(items[1], entry["Categories"]):
-                matchedlist.append(entryindex)
-                submenu[items[0]] += getExecLine(entry)
+            for cat in entry["Categories"]:
+                if items[0] == cat:
+                    matchedlist.append(entryindex)
+                    submenu[items[0]] += getExecLine(entry)
             entryindex += 1
 
     # make text from submenu
-
+    logging.info("Scaning submenus")
     menuText = ""
+    labelIndex = 0
     for items in menuconfig.cats:
         if items[0] in submenu and submenu[items[0]] == "":
-            print("The submenu '" + items[0] + "' has no entries and will be ignored.");
+            logging.warning("The submenu '%s' has no entries and will be ignored.", items[0]);
+            labelIndex +=1
             continue
-        menuText += "<menu id=\"" + items[0] + "\" label=\"" + items[0] + "\""
-        if items[2] != "":
-            icon = getIconPath(items[2])
-            if len(icon) > 0:
-                menuText += " icon=\"" + icon + "\""
+        menuText += "<menu id=\"" + items[0] + "\" label=\"" + menuconfig.cats_labels[labelIndex] + "\""
+        if len(getIconPath(items[1])) != 0:
+            menuText += " icon=\"" + getIconPath(items[1]) + "\""
         menuText += ">"
-        if items[1] == "Unmatched":
+        if items[0] == "Others":
             for index in range(len(entries)):
                 if index not in matchedlist:
                     menuText += getExecLine(entries[index])
         else:
             menuText += submenu[items[0]]
         menuText += "</menu>\n"
-    print("There were " + str(len(matchedlist)) + " entries matching the categories.");
+        labelIndex +=1
+    logging.debug("There were %d entries matching the categories.", len(matchedlist));
+    logging.info("writing new menu...")
     fp = open(os.path.expanduser("~") + "/.config/openbox/menu.xml", "r+")
     linearray = fp.read().split("\n")
     fp.seek(0)
@@ -164,4 +166,6 @@ def writeMenu():
     os.system("openbox --reconfigure")
     return
 
-writeMenu()
+if __name__ == "__main__":
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+    obmenu = writeMenu()
