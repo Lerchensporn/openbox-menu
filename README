@@ -1,9 +1,5 @@
 1) Configure menuconfig.py like you want.
-   The first list item is the menu title, the second
-   one are the categories in the *.desktop files.
-   A plus sign means inclusion, a minus sign is exclusion.
-   The third item specifies the icon name, either a full path
-   or a file name. The search path for the file name is
+   The search paths for the file name are
    /usr/share/pixmaps and /usr/share/icons.
 
 2) Write your ~/.config/openbox/menu.xml and insert the comments:
@@ -11,6 +7,5 @@
     <!-- END AUTOMENU -->
    Each comment has to be on a single line.
 
-3) Execute menu.py, run
-    $ openbox --reconfigure.
+3) Execute menu.py
    The menu is written between the comments in menu.xml.

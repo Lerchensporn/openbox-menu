@@ -8,12 +8,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -26,7 +26,7 @@ def replaceSymbols(text):
             "%F":"", "%f":"",
             "&":"amp;",
           }
-          
+
     for i, o in dic.items():
         text = text.replace(i, o)
     return text
@@ -103,12 +103,12 @@ def getExecLine(entry):
 
 
 def writeMenu():
-    logging.info("Parsing .desktop files ...")
+    logging.info("Parsing .desktop files")
     entries = parseDeskFiles()
     logging.debug("Found %d entries.", len(entries))
 
     # loop through categories
-    logging.info("Scaning categories... ")
+    logging.info("Scanning categories")
     matchedlist = []
     submenu = {}
     for items in menuconfig.cats:
@@ -124,7 +124,7 @@ def writeMenu():
             entryindex += 1
 
     # make text from submenu
-    logging.info("Scaning submenus")
+    logging.info("Scanning submenus")
     menuText = ""
     labelIndex = 0
     for items in menuconfig.cats:
@@ -145,8 +145,14 @@ def writeMenu():
         menuText += "</menu>\n"
         labelIndex +=1
     logging.debug("There were %d entries matching the categories.", len(matchedlist));
-    logging.info("writing new menu...")
-    fp = open(os.path.expanduser("~") + "/.config/openbox/menu.xml", "r+")
+    logging.info("Writing new menu")
+
+    try:
+        fp = open(os.path.expanduser("~") + "/.config/openbox/menu.xml", "r+")
+    except:
+        logging.error("Cannot open menu file")
+        return
+
     linearray = fp.read().split("\n")
     fp.seek(0)
     buf = ""
@@ -163,6 +169,7 @@ def writeMenu():
     fp.write(buf)
     fp.truncate()
     fp.close()
+    logging.info("Reconfiguring openbox")
     os.system("openbox --reconfigure")
     return
 
