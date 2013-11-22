@@ -17,8 +17,8 @@ cats = [
 
 # Labels for categories (in the same order as the variable above)
 # Format: [ "category 1", "category 2", "..." ]
-cats_labels = [ "Acessories",
-                "Development", 
+cats_labels = [ "Accessories",
+                "Development",
                 "Network",
                 "Office",
                 "Games",
