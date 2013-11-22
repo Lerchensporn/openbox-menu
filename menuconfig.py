@@ -2,6 +2,7 @@
 # See http://standards.freedesktop.org/menu-spec/latest/apa.html
 # Format: [ ["category 1", "icon-for-category-1"], ["category 2", "icon-for-category-2"], "..." ]
 cats = [
+    ["Utility",    "applications-accessories.png"],
     ["Development","applications-development.png"],
     ["Network",    "applications-internet.png"   ],
     ["Office",     "applications-office.png"     ],
@@ -16,10 +17,11 @@ cats = [
 
 # Labels for categories (in the same order as the variable above)
 # Format: [ "category 1", "category 2", "..." ]
-cats_labels = [ "Development", 
+cats_labels = [ "Acessories",
+                "Development", 
                 "Network",
                 "Office",
-                "Game",
+                "Games",
                 "Science",
                 "Graphics",
                 "Multimedia",
